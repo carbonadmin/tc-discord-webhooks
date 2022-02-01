@@ -216,12 +216,13 @@ public class DiscordNotificator implements Notificator {
         String title = "Build succeeded!";
         String description = "The build with the ID " + sRunningBuild.getBuildId() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
+        String downloadUrl = "https://storage.carbonstudio.pl/index.php/apps/files/?dir=/Crimen/Windows%20Build/" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
                         description,
-                        url,
+                        downloadUrl,
                         DiscordEmbedColor.GREEN,
                         null,
                         null,
