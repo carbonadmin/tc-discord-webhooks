@@ -178,12 +178,13 @@ public class DiscordNotificator implements Notificator {
         // Build name
         discordEmbedFields.add(new DiscordEmbedField("Build:", sRunningBuild.getBuildTypeName(), true));
 
-        // Download link(only if enabled!)
+        // Download link(only if enabled!). Also build must be successful to add the download link.
         String enableDownloadLink = sRunningBuild.getBuildOwnParameters().get("DiscordDownloadLink");
-        if(enableDownloadLink == "true")
+        if(enableDownloadLink == "true" && sRunningBuild.getBuildStatus().isSuccessful())
         {
             String buildTypeNameNoWitespace = StringUtils.replace(sRunningBuild.getBuildTypeName(), " ", "%20");
-            String downloadHyperlink = "[Click here](https://storage.carbonstudio.pl/index.php/apps/files/?dir=/" + projectName + "/" + buildTypeNameNoWitespace + "/" + sRunningBuild.getBuildId() + ")";
+            String projectNameNoWhitespace = StringUtils.replace(projectName, " ", "%20");
+            String downloadHyperlink = "[Click here](https://storage.carbonstudio.pl/index.php/apps/files/?dir=/" + projectNameNoWhitespace + "/" + buildTypeNameNoWitespace + "/" + sRunningBuild.getBuildId() + ")";
             discordEmbedFields.add(new DiscordEmbedField("Download:", downloadHyperlink, true));
         }
 
