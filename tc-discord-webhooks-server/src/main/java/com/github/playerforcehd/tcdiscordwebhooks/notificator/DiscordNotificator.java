@@ -240,7 +240,7 @@ public class DiscordNotificator implements Notificator {
     @Override
     public void notifyBuildFailed(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> users) {
         String title = "Build failed";
-        String description = "The build with the ID " + sRunningBuild.getBuildId() + " has failed!";
+        String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
         DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("@Programmer");
@@ -325,7 +325,7 @@ public class DiscordNotificator implements Notificator {
     @Override
     public void notifyBuildProbablyHanging(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> users) {
         String title = "Build is probably hanging";
-        String description = "The build with the ID " + sRunningBuild.getBuildId() + " is probably hanging!";
+        String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
         DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("@Programmer");
