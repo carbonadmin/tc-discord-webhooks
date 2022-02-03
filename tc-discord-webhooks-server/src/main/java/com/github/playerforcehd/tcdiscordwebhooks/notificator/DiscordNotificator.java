@@ -243,7 +243,7 @@ public class DiscordNotificator implements Notificator {
         String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
-        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("@Programmer");
+        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("<@Programmer>");
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
@@ -328,7 +328,7 @@ public class DiscordNotificator implements Notificator {
         String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
-        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("@Programmer");
+        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("<@Programmer>");
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
