@@ -187,6 +187,10 @@ public class DiscordNotificator implements Notificator {
             String downloadHyperlink = "[Click here](https://storage.carbonstudio.pl/index.php/apps/files/?dir=/" + projectNameNoWhitespace + "/" + buildTypeNameNoWitespace + "/" + sRunningBuild.getBuildId() + ")";
             discordEmbedFields.add(new DiscordEmbedField("Download:", downloadHyperlink, true));
         }
+        else if(sRunningBuild.getBuildStatus().isSuccessful() == false)
+        {
+            discordEmbedFields.add(new DiscordEmbedField("See:", "<@Programmer>", true));
+        }
 
         Comment comment = sRunningBuild.getBuildComment();
         if(comment != null) {
@@ -243,14 +247,13 @@ public class DiscordNotificator implements Notificator {
         String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
-        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("<@Programmer>");
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
                         description,
                         url,
                         DiscordEmbedColor.RED,
-                        tagMessage,
+                        null,
                         null,
                         null,
                         buildFieldsForRunningBuild(sRunningBuild)
@@ -328,14 +331,13 @@ public class DiscordNotificator implements Notificator {
         String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
-        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("<@Programmer>");
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
                         description,
                         url,
                         DiscordEmbedColor.ORANGE,
-                        tagMessage,
+                        null,
                         null,
                         null,
                         buildFieldsForRunningBuild(sRunningBuild)
