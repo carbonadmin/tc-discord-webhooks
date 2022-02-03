@@ -189,7 +189,7 @@ public class DiscordNotificator implements Notificator {
         }
         else if(sRunningBuild.getBuildStatus().isSuccessful() == false)
         {
-            discordEmbedFields.add(new DiscordEmbedField("See:", "<@Programmer>", true));
+            discordEmbedFields.add(new DiscordEmbedField("See:", "<@&352441654524903425>", true));
         }
 
         Comment comment = sRunningBuild.getBuildComment();
