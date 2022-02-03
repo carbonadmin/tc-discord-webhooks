@@ -183,7 +183,7 @@ public class DiscordNotificator implements Notificator {
         if(enableDownloadLink == "true" && sRunningBuild.getBuildStatus().isSuccessful())
         {
             String buildTypeNameNoWitespace = StringUtils.replace(sRunningBuild.getBuildTypeName(), " ", "%20");
-            String projectNameNoWhitespace = StringUtils.replace(projectName, " ", "%20");
+            String projectNameNoWhitespace = StringUtils.replace(projectName, " ", "");
             String downloadHyperlink = "[Click here](https://storage.carbonstudio.pl/index.php/apps/files/?dir=/" + projectNameNoWhitespace + "/" + buildTypeNameNoWitespace + "/" + sRunningBuild.getBuildId() + ")";
             discordEmbedFields.add(new DiscordEmbedField("Download:", downloadHyperlink, true));
         }
