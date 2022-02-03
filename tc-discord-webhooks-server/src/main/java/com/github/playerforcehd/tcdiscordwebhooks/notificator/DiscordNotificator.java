@@ -21,6 +21,7 @@ import com.github.playerforcehd.tcdiscordwebhooks.discord.DiscordWebHookProcesso
 import com.github.playerforcehd.tcdiscordwebhooks.discord.embeds.DiscordEmbed;
 import com.github.playerforcehd.tcdiscordwebhooks.discord.embeds.DiscordEmbedColor;
 import com.github.playerforcehd.tcdiscordwebhooks.discord.embeds.DiscordEmbedField;
+import com.github.playerforcehd.tcdiscordwebhooks.discord.embeds.DiscordEmbedFooter;
 import jetbrains.buildServer.Build;
 import jetbrains.buildServer.notification.Notificator;
 import jetbrains.buildServer.notification.NotificatorRegistry;
@@ -38,6 +39,7 @@ import jetbrains.buildServer.vcs.VcsRoot;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * The {@link Notificator} service that handles triggered notifications
@@ -67,17 +70,9 @@ public class DiscordNotificator implements Notificator {
      */
     private static final String DISPLAY_NAME = "Discord WebHook";
     /**
-     * The name of the {@link PropertyKey} {@link #WEBHOOK_URL}
-     */
-    private static final String WEBHOOK_URL_KEY = "DiscordWebHookURL";
-    /**
      * The name of the {@link PropertyKey} {@link #USERNAME}
      */
     private static final String WEBHOOK_USERNAME_KEY = "DiscordUsername";
-    /**
-     * {@link PropertyKey} of the property that defines the URL of the WebHook
-     */
-    private static final PropertyKey WEBHOOK_URL = new NotificatorPropertyKey(TYPE, WEBHOOK_URL_KEY);
     /**
      * {@link PropertyKey} of the property that defines the Username of the WebHook
      */
@@ -109,7 +104,6 @@ public class DiscordNotificator implements Notificator {
      */
     private void initializeNotificator(NotificatorRegistry notificatorRegistry) {
         ArrayList<UserPropertyInfo> userProperties = new ArrayList<>();
-        userProperties.add(new UserPropertyInfo(WEBHOOK_URL_KEY, "WebHook URL"));
         userProperties.add(new UserPropertyInfo(WEBHOOK_USERNAME_KEY, "Username"));
         notificatorRegistry.register(this, userProperties);
     }
@@ -122,9 +116,16 @@ public class DiscordNotificator implements Notificator {
      * @param discordWebHookPayload The payload to send
      * @param users                 The users that should be notified
      */
-    private void processNotify(@NotNull DiscordWebHookPayload discordWebHookPayload, @NotNull Set<SUser> users) {
+    private void processNotify(@NotNull DiscordWebHookPayload discordWebHookPayload, @NotNull Set<SUser> users, SRunningBuild sRunningBuild) {
         for (SUser user : users) {
-            String webHookUrl = user.getPropertyValue(WEBHOOK_URL);
+
+            if(sRunningBuild == null)
+            {
+                LOGGER.error("The Discord notification could not be found, because sRunningBuild is null!");
+                return;
+            }
+
+            String webHookUrl = sRunningBuild.getBuildOwnParameters().get("DiscordWebhook");
             String username = user.getPropertyValue(USERNAME);
             if (webHookUrl == null || webHookUrl.equals("")) {
                 LOGGER.error("The Discord WebHook URL for user '" + user.getName() + "' has not been set. Can't execute the WebHook!");
@@ -176,13 +177,16 @@ public class DiscordNotificator implements Notificator {
         discordEmbedFields.add(new DiscordEmbedField("Project: ", projectName, true));
         // Build name
         discordEmbedFields.add(new DiscordEmbedField("Build:", sRunningBuild.getBuildTypeName(), true));
-        // Branch
-        Branch branch = sRunningBuild.getBranch();
-        String branchName = "Default";
-        if (branch != null && !branch.getName().equals(Branch.DEFAULT_BRANCH_NAME)) {
-            branchName = branch.getDisplayName();
+
+        // Download link(only if enabled!)
+        String enableDownloadLink = sRunningBuild.getBuildOwnParameters().get("DiscordDownloadLink");
+        if(enableDownloadLink == "true")
+        {
+            String buildTypeNameNoWitespace = StringUtils.replace(sRunningBuild.getBuildTypeName(), " ", "%20");
+            String downloadHyperlink = "[Click here](https://storage.carbonstudio.pl/index.php/apps/files/?dir=/" + projectName + "/" + buildTypeNameNoWitespace + "/" + sRunningBuild.getBuildId() + ")";
+            discordEmbedFields.add(new DiscordEmbedField("Download:", downloadHyperlink, true));
         }
-        discordEmbedFields.add(new DiscordEmbedField("Branch", branchName, true));
+
         Comment comment = sRunningBuild.getBuildComment();
         if(comment != null) {
             discordEmbedFields.add(new DiscordEmbedField("Comment", comment.getComment(), false));
@@ -208,21 +212,20 @@ public class DiscordNotificator implements Notificator {
                         buildFieldsForRunningBuild(sRunningBuild)
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, sRunningBuild);
     }
 
     @Override
     public void notifyBuildSuccessful(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> users) {
         String title = "Build succeeded!";
-        String description = "The build with the ID " + sRunningBuild.getBuildId() + " has succeeded!";
+        String description = "The build: " + sRunningBuild.getBuildNumber() + " has succeeded!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
-        String downloadUrl = "https://storage.carbonstudio.pl/index.php/apps/files/?dir=/Crimen/Windows%20Build/" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
                         description,
-                        downloadUrl,
+                        url,
                         DiscordEmbedColor.GREEN,
                         null,
                         null,
@@ -230,7 +233,7 @@ public class DiscordNotificator implements Notificator {
                         buildFieldsForRunningBuild(sRunningBuild)
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, sRunningBuild);
     }
 
     @Override
@@ -251,7 +254,7 @@ public class DiscordNotificator implements Notificator {
                         buildFieldsForRunningBuild(sRunningBuild)
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, sRunningBuild);
     }
 
     @Override
@@ -272,7 +275,7 @@ public class DiscordNotificator implements Notificator {
                         buildFieldsForRunningBuild(sRunningBuild)
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, sRunningBuild);
     }
 
     @Override
@@ -293,7 +296,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -314,7 +317,7 @@ public class DiscordNotificator implements Notificator {
                         buildFieldsForRunningBuild(sRunningBuild)
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, sRunningBuild);
     }
 
     @Override
@@ -335,7 +338,7 @@ public class DiscordNotificator implements Notificator {
                         buildFieldsForRunningBuild(sRunningBuild)
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, sRunningBuild);
     }
 
     @Override
@@ -355,7 +358,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -375,7 +378,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -395,7 +398,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -415,7 +418,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -435,7 +438,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -455,7 +458,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -475,7 +478,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -495,7 +498,7 @@ public class DiscordNotificator implements Notificator {
                         new DiscordEmbedField[]{}
                 )
         });
-        this.processNotify(discordWebHookPayload, users);
+        this.processNotify(discordWebHookPayload, users, null);
     }
 
     @Override
@@ -517,7 +520,7 @@ public class DiscordNotificator implements Notificator {
                             new DiscordEmbedField[]{}
                     )
             });
-            this.processNotify(discordWebHookPayload, users);
+            this.processNotify(discordWebHookPayload, users, null);
         }
     }
 
@@ -540,7 +543,7 @@ public class DiscordNotificator implements Notificator {
                             new DiscordEmbedField[]{}
                     )
             });
-            this.processNotify(discordWebHookPayload, users);
+            this.processNotify(discordWebHookPayload, users, null);
         }
     }
 
@@ -563,7 +566,7 @@ public class DiscordNotificator implements Notificator {
                             new DiscordEmbedField[]{}
                     )
             });
-            this.processNotify(discordWebHookPayload, users);
+            this.processNotify(discordWebHookPayload, users, null);
         }
     }
 
@@ -586,7 +589,7 @@ public class DiscordNotificator implements Notificator {
                             new DiscordEmbedField[]{}
                     )
             });
-            this.processNotify(discordWebHookPayload, users);
+            this.processNotify(discordWebHookPayload, users, null);
         }
     }
 
