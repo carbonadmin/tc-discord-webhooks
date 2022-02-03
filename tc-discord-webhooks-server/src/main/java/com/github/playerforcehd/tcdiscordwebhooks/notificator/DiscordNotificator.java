@@ -242,13 +242,14 @@ public class DiscordNotificator implements Notificator {
         String description = "The build with the ID " + sRunningBuild.getBuildId() + " has failed!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
+        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("@Programmer");
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
                         description,
                         url,
                         DiscordEmbedColor.RED,
-                        null,
+                        tagMessage,
                         null,
                         null,
                         buildFieldsForRunningBuild(sRunningBuild)
@@ -326,13 +327,14 @@ public class DiscordNotificator implements Notificator {
         String description = "The build with the ID " + sRunningBuild.getBuildId() + " is probably hanging!";
         String url = this.sBuildServer.getRootUrl() + "/viewLog.html?buildId=" + sRunningBuild.getBuildId();
         DiscordWebHookPayload discordWebHookPayload = new DiscordWebHookPayload();
+        DiscordEmbedFooter tagMessage = new DiscordEmbedFooter("@Programmer");
         discordWebHookPayload.setEmbeds(new DiscordEmbed[]{
                 new DiscordEmbed(
                         title,
                         description,
                         url,
                         DiscordEmbedColor.ORANGE,
-                        null,
+                        tagMessage,
                         null,
                         null,
                         buildFieldsForRunningBuild(sRunningBuild)
